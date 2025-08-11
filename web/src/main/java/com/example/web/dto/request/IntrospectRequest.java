@@ -17,4 +17,5 @@ import lombok.experimental.FieldDefaults;
 @Getter
 public class IntrospectRequest {
     String token;
+    String idtoken;
 }
