@@ -8,22 +8,17 @@ import com.example.web.enums.Role;
 import com.example.web.exception.AppException;
 import com.example.web.exception.ErrorCode;
 import com.example.web.mapper.UserMapper;
+import com.example.web.repository.RoleRepository;
 import com.example.web.repository.UserRepository;
-import com.nimbusds.jose.proc.SecurityContext;
-
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import java.util.HashSet;
 import java.util.List;
 
@@ -35,6 +30,7 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
 
     public UserResponse usercreateRequest(UserCreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -68,10 +64,10 @@ public class UserService {
     public UserResponse updateUser(String id, UserUpdateRequest new_user) {
         User old = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        if (userRepository.existsByUsername(new_user.getUsername())) {
-            throw new AppException(ErrorCode.USER_EXISTED);
-        }
         userMapper.toUpdateUser(old, new_user);
+        old.setPassword(passwordEncoder.encode(new_user.getPassword()));
+        var roles = roleRepository.findAllById(new_user.getRoles());
+        old.setRoles(new HashSet<>(roles));
         return userMapper.toUserResponse(userRepository.save(old));
     }
 

@@ -2,17 +2,17 @@ package com.example.web.service;
 
 import java.text.ParseException;
 import java.util.Date;
-import java.util.function.IntPredicate;
-
+import java.util.StringJoiner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import com.example.web.dto.request.AuthenticationRequest;
 import com.example.web.dto.request.IntrospectRequest;
 import com.example.web.dto.response.AuthenticationResponse;
 import com.example.web.dto.response.IntrospectResponse;
-import com.example.web.entity.Role;
 import com.example.web.entity.User;
 import com.example.web.exception.AppException;
 import com.example.web.exception.ErrorCode;
@@ -29,7 +29,6 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
-import jakarta.persistence.criteria.CriteriaBuilder.In;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -77,7 +76,7 @@ public class AuthenticationService {
                 .subject(user.getUsername())
                 .issuer("javaweb.com")
                 .issueTime(new Date())
-                .expirationTime(new Date(System.currentTimeMillis() + 300 * 1000))
+                .expirationTime(new Date(System.currentTimeMillis() + 300 * 100000))
                 .claim("scope", buildScope(user))
                 .build();
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -93,13 +92,11 @@ public class AuthenticationService {
     }
 
     private String buildScope(User user) {
-        StringBuilder scope = new StringBuilder();
-        // for (Role role : user.getRoles()) {
-        // if (scope.length() > 0) {
-        // scope.append(" ");
-        // }
-        // scope.append(role);
-        // }
+        StringJoiner scope = new StringJoiner(" ");
+        if (!CollectionUtils.isEmpty(user.getRoles()))
+            user.getRoles().forEach(role -> {
+                scope.add(role.getName());
+            });
         return scope.toString();
     }
 }

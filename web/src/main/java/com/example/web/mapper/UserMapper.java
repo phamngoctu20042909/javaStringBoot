@@ -1,6 +1,7 @@
 package com.example.web.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import com.example.web.dto.request.UserCreateRequest;
@@ -14,5 +15,6 @@ public interface UserMapper {
 
     UserResponse toUserResponse(User user);
 
+    @Mapping(target = "roles", ignore = true)
     void toUpdateUser(@MappingTarget User user, UserUpdateRequest request);
 }
